@@ -1,24 +1,35 @@
-cmake_minimum_required(VERSION 3.18.0)
-project(Lockless VERSION 1.0.0)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+cmake_minimum_required(VERSION 3.20)
+project(lockless VERSION 0.1.0 LANGUAGES CXX)
 
-add_library(${PROJECT_NAME} INTERFACE)
+set(CMAKE_CXX_STANDARD 23)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
+add_library(lockless INTERFACE)
+add_library(lockless::lockless ALIAS lockless)
 
-target_include_directories(
-    ${PROJECT_NAME}
-    INTERFACE
-    $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(lockless INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
-# find_package(Catch2 3 REQUIRED)
-# # These tests can use the Catch2-provided main
-# add_executable(tests test.cpp)
-# target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+target_compile_options(lockless INTERFACE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:
+        -Wall -Wextra -Wpedantic
+        -Wno-interference-size>
+)
 
-# # These tests need their own main
-# add_executable(custom-main-tests test.cpp test-main.cpp)
-# target_link_libraries(custom-main-tests PRIVATE Catch2::Catch2)
+option(SANITIZE "Enable sanitizers (thread|address|undefined)" "")
+if(SANITIZE STREQUAL "thread")
+    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=thread)
+elseif(SANITIZE STREQUAL "address")
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
+option(LOCKLESS_TESTS "Build tests" ON)
+if(LOCKLESS_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
