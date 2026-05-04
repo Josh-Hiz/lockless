@@ -8,34 +8,34 @@ A C++23 concurrency library providing lock-free data structures and thread execu
 
 | Type              | Header                         | Description                                                               |
 |-------------------|--------------------------------|---------------------------------------------------------------------------|
-| `SPSCQueue<T>`    | `containers/spsc_queue.hpp`    | Single-producer, single-consumer ring buffer.                             |
-| `MPMCQueue<T>`    | `containers/mpmc_queue.hpp`    | Multi-producer, multi-consumer bounded queue (Vyukov's algorithm).        |
+| `SPSCQueue<T>`    | `containers/spsc_queue.h`      | Single-producer, single-consumer ring buffer.                             |
+| `MPMCQueue<T>`    | `containers/mpmc_queue.h`      | Multi-producer, multi-consumer bounded queue (Vyukov's algorithm).        |
 
 ### Synchronization
 
 | Type         | Header             | Description                                       |
 |--------------|--------------------|---------------------------------------------------|
-| `SeqLock<T>` | `sync/seqlock.hpp` | Read-optimized lock. Readers never block writers. |
+| `SeqLock<T>` | `sync/seqlock.h`   | Read-optimized lock. Readers never block writers. |
 
 ### Threadpool types and thread executors
 
 | Type               | Header                      | Description                                              |
 |--------------------|-----------------------------|----------------------------------------------------------|
-| `StaticThreadPool` | `executors/thread_pool.hpp` | Work-stealing thread pool with per-thread queues.        |
-| `Task`             | `executors/task.hpp`        | Callable.                                                |
+| `StaticThreadPool` | `executors/thread_pool.h`   | Work-stealing thread pool with per-thread queues.        |
+| `Task`             | `executors/task.h`          | Callable.                                                |
 
 ### Concurrency Primitives
 
 | Type                             | Header             | Description                                           |
 |----------------------------------|--------------------|-------------------------------------------------------|
-| `acquire_load` / `release_store` | `core/memory.hpp`  | Named memory-order wrappers.                          |
-| `acq_rel_cas` / `release_cas`    | `core/memory.hpp`  | Named CAS operations.                                 |
-| `CacheLineAligned<T>`            | `core/cache.hpp`   | Pads T to a full cache line to prevent false sharing. |
-| `PaddedAtomic<T>`                | `core/cache.hpp`   | Atomic on its own cache line.                         |
+| `acquire_load` / `release_store` | `core/memory.h`    | Named memory-order wrappers.                          |
+| `acq_rel_cas` / `release_cas`    | `core/memory.h`    | Named CAS operations.                                 |
+| `CacheLineAligned<T>`            | `core/cache.h`     | Pads T to a full cache line to prevent false sharing. |
+| `PaddedAtomic<T>`                | `core/cache.h`     | Atomic on its own cache line.                         |
 
 ExponentialBackoff and EBR guards are also provided, but are extremely niche, this was mostly implemented out of interest.
 
-You can find them in `core/backoff.hpp` and `core/ebr.hpp` if you are interested.
+You can find them in `core/backoff.h` and `core/ebr.h` if you are interested.
 
 ## Requirements
 
@@ -77,8 +77,8 @@ target_link_libraries(your_target PRIVATE lockless::lockless)
 Then include what you need:
 
 ```cpp
-#include <lockless/lockless.hpp>         
-#include <lockless/containers/mpmc_queue.hpp> 
+#include <lockless/lockless.h>         
+#include <lockless/containers/mpmc_queue.h> 
 ```
 
 ## Examples
@@ -86,7 +86,7 @@ Then include what you need:
 ### SPSC Queue — inter-thread pipeline
 
 ```cpp
-#include <lockless/containers/spsc_queue.hpp>
+#include <lockless/containers/spsc_queue.h>
 #include <thread>
 
 lockless::SPSCQueue<int> queue(1024);
@@ -112,7 +112,7 @@ std::thread consumer([&]{
 ### MPMC Queue
 
 ```cpp
-#include <lockless/containers/mpmc_queue.hpp>
+#include <lockless/containers/mpmc_queue.h>
 
 lockless::MPMCQueue<Task> queue(4096);
 
@@ -126,7 +126,7 @@ if (auto t = queue.pop()) execute(*t);
 ### Thread Pool
 
 ```cpp
-#include <lockless/executors/thread_pool.hpp>
+#include <lockless/executors/thread_pool.h>
 
 lockless::StaticThreadPool pool;  // one thread per core
 
@@ -142,7 +142,7 @@ pool.shutdown();
 ### SeqLock
 
 ```cpp
-#include <lockless/sync/seqlock.hpp>
+#include <lockless/sync/seqlock.h>
 
 struct Config { int timeout; int retries; };
 lockless::SeqLock<Config> config(Config{30, 3});
