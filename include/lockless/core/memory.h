@@ -1,7 +1,8 @@
-#ifndef LOCKLESS_CORE_MEMORY_H
-#define LOCKLESS_CORE_MEMORY_H
+#ifndef _LOCKLESS_MEMORY_H_
+#define _LOCKLESS_MEMORY_H_
 
 #include <atomic>
+
 namespace lockless {
 
 template <typename T> T relaxed_load(const std::atomic<T> &a) noexcept {
@@ -45,4 +46,5 @@ bool release_cas(std::atomic<T> &a, T &expected, T desired) noexcept {
 }
 
 } // namespace lockless
-#endif // LOCKLESS_CORE_MEMORY_H
+
+#endif // _LOCKLESS_MEMORY_H_
