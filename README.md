@@ -168,7 +168,7 @@ Michael, M. M., & Scott, M. L. (1996). Simple, fast, and practical non-blocking 
 
 Fraser, K. (2004). *Practical lock-freedom* [Doctoral dissertation, University of Cambridge]. <https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-579.pdf>
 
-Vyukov, D. (2010). *Bounded MPMC queue*. 1024cores. <https://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue>
+Vyukov, D. (2010). *Bounded MPMC queue*. 1024cores. <https://sites.google.com/site/1024cores/home/lock-free-algorithms/queues/bounded-mpmc-queue>
 
 ## Disclaimer
 
