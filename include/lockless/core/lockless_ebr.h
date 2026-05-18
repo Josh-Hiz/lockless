@@ -13,20 +13,6 @@
 
 namespace lockless {
 
-// Simplified Epoch-Based Reclamation
-//
-// Each thread is either "inside" a critical section (slot holds the current
-// global epoch) or "outside" (slot holds INACTIVE).
-//
-// Retire appends a pointer to the current-epoch list on the calling
-// thread's per-thread retire vector. After each retire we try to advance
-// the global epoch; if every active thread is at the current epoch, we
-// advance and free this thread's two-epoch-old list.
-//
-// Three epochs: with two you cannot distinguish "thread just entered the
-// new epoch" from "thread is still in the old one"; the third epoch is the
-// grace period that proves no thread can still be holding a retired ptr.
-// https://aturon.github.io/blog/2015/08/27/epoch/ and C++ Concurrency and action book
 inline constexpr std::size_t kMaxThreads = 32;
 inline constexpr std::size_t kEpochs     = 3;
 
@@ -52,6 +38,9 @@ private:
     std::size_t slot_idx_;
 };
 
+// Simplified Epoch-Based Reclamation
+// Each thread is either "inside" a critical section (slot holds the current
+// global epoch) or "outside" (slot holds INACTIVE).
 class EbrDomain {
 public:
     EbrDomain() = default;
@@ -98,11 +87,16 @@ private:
         return slot;
     }
 
+    // Retire appends a pointer to the current-epoch list on the calling
+    // thread's per-thread retire vector. After each retire we try to advance
+    // the global epoch; if every active thread is at the current epoch, we
+    // advance and free this thread's two-epoch-old list.
+    //
+    // Three epochs: with two you cannot distinguish "thread just entered the
+    // new epoch" from "thread is still in the old one"; the third epoch is the
+    // grace period that proves no thread can still be holding a retired ptr.
+    // https://aturon.github.io/blog/2015/08/27/epoch/ and C++ Concurrency and action book
     void enter(std::size_t slot_idx) {
-        // seq_cst on both sides: need a global total order between
-        // "thread announces epoch V" and "another thread observes slot V".
-        // Without it, a reclaimer could advance past us while our store is
-        // still in flight, freeing memory we're about to read.
         uint64_t e = global_epoch_.load(std::memory_order_seq_cst);
         slots_[slot_idx].epoch.store(e, std::memory_order_seq_cst);
     }
@@ -149,7 +143,6 @@ private:
     std::array<Node, kMaxThreads>    slots_;
 };
 
-// EbrGuard inline implementations
 inline EbrGuard::EbrGuard(EbrDomain& domain)
     : domain_(&domain), slot_idx_(domain.assign_slot()) {
     domain_->enter(slot_idx_);
