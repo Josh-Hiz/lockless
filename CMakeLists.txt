@@ -3,28 +3,26 @@ project(lockless VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Build Lockless
 add_library(lockless INTERFACE)
 add_library(lockless::lockless ALIAS lockless)
 
-target_include_directories(lockless INTERFACE
+target_include_directories(lockless INTERFACE 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
 target_compile_options(lockless INTERFACE
-    $<$<CXX_COMPILER_ID:GNU,Clang>:
-        -Wall -Wextra -Wpedantic
-        -Wno-interference-size
-    >
+    $<$<CXX_COMPILER_ID:GNU,Clang>: -Wall -Wextra -Wpedantic>
 )
 
-option(SANITIZE "Enable sanitizers (thread|address|undefined)" "")
-if(SANITIZE STREQUAL "thread")
-    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=thread)
-elseif(SANITIZE STREQUAL "address")
-    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address,undefined)
-endif()
+# Lockless requires threading available
+find_package(Threads REQUIRED)
+target_link_libraries(lockless INTERFACE Threads::Threads)
+
+# Build a test binary
+add_executable(lockless_test test/main.cpp)
+target_link_libraries(lockless_test PRIVATE lockless::lockless)
+

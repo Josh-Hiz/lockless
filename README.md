@@ -6,34 +6,19 @@ A C++23 concurrency library providing lock-free data structures and thread execu
 
 ### Concurrent Containers
 
-| Type              | Header                         | Description                                                               |
-|-------------------|--------------------------------|---------------------------------------------------------------------------|
-| `SPSCQueue<T>`    | `containers/spsc_queue.h`      | Single-producer, single-consumer ring buffer.                             |
-| `MPMCQueue<T>`    | `containers/mpmc_queue.h`      | Multi-producer, multi-consumer bounded queue (Vyukov's algorithm).        |
+1. `SPSCQueue<T>` in `containers/lockless_spsc_queue.h`: Single-producer, single-consumer ring buffer.
+2. `MPMCQueue<T>` in `containers/lockless_mpmc_queue.h`: Multi-producer, multi-consumer bounded queue (Vyukov's algorithm).
+3. `TreiberStack<T>` in `containers/lockless_stack.h` : Treiber-stack implementation using a LIFO linked-list.
 
-### Synchronization
+### Synchronization Primitives
 
-| Type         | Header             | Description                                       |
-|--------------|--------------------|---------------------------------------------------|
-| `SeqLock<T>` | `sync/seqlock.h`   | Read-optimized lock. Readers never block writers. |
+1. `SeqLock<T>` in `sync/seqlock.h` : Single-writer multiple-readers where readers never block writers using atomics.
 
-### Threadpool types and thread executors
+### Threadpool Executors
 
-| Type               | Header                      | Description                                              |
-|--------------------|-----------------------------|----------------------------------------------------------|
-| `StaticThreadPool` | `executors/thread_pool.h`   | Work-stealing thread pool with per-thread queues.        |
-| `Task`             | `executors/task.h`          | Callable.                                                |
+1. `LocklessPool` in `executors/thread_pool.h`: Work-stealing thread pool with per-thread lock-free MPMC queues.
 
-### Concurrency Primitives
-
-| Type                             | Header             | Description                                           |
-|----------------------------------|--------------------|-------------------------------------------------------|
-| `acquire_load` / `release_store` | `core/memory.h`    | Named memory-order wrappers.                          |
-| `acq_rel_cas` / `release_cas`    | `core/memory.h`    | Named CAS operations.                                 |
-| `CacheLineAligned<T>`            | `core/cache.h`     | Pads T to a full cache line to prevent false sharing. |
-| `PaddedAtomic<T>`                | `core/cache.h`     | Atomic on its own cache line.                         |
-
-ExponentialBackoff and EBR guards are also provided, but are extremely niche, this was mostly implemented out of interest.
+ExponentialBackoff and EBR guards are provided, but are extremely niche, this was mostly implemented out of interest and optimization.
 
 You can find them in `core/backoff.h` and `core/ebr.h` if you are interested.
 
@@ -49,20 +34,6 @@ git clone https://github.com/Josh-Hiz/lockless
 cd lockless
 cmake -B build
 cmake --build build
-```
-
-### With ThreadSanitizer
-
-```bash
-cmake -B build -DSANITIZE=thread
-cmake --build build 
-```
-
-### With AddressSanitizer
-
-```bash
-cmake -B build -DSANITIZE=address
-cmake --build build 
 ```
 
 ## Usage
@@ -82,6 +53,8 @@ Then include what you need:
 ```
 
 ## Examples
+
+Please see `test/main.cpp` for how to use each of the main items provided.
 
 ### SPSC Queue — inter-thread pipeline
 
@@ -170,10 +143,10 @@ Fraser, K. (2004). *Practical lock-freedom* [Doctoral dissertation, University o
 
 Vyukov, D. (2010). *Bounded MPMC queue*. 1024cores. <https://sites.google.com/site/1024cores/home/lock-free-algorithms/queues/bounded-mpmc-queue>
 
+*What is Low Latency C++? (Part 2) - Timur Doumler - CppNow 2023*. <https://www.youtube.com/watch?v=5uIsadq-nyk>
+
 ## Disclaimer
 
-THIS DOES NOT WORK ON INTEL MACHINES MOST LIKELY. I developed this purely for playing around on my Mac M1 Pro, I highly doubt machines with intel architectures are gonna work with Lockless.
+THIS DOES NOT WORK ON INTEL MACHINES MOST LIKELY. I developed this purely out of my own interest on my Mac M1 Pro, I highly doubt machines with intel architectures are gonna work with Lockless given that ExponentialBackoff only utilizes ARM instruction hints for yield.
 
 This project was meant for me to learn lock-free concurreny in C++ and I don't think this should be used in real projects, this is a sort of "for-fun" project because I am extremely interested in C++'s memory model and how we can achieve lock-free data-strucutres and thread-pools. Thread-pools have been quite revolutionary and I use them a lot in both personal projects as well as academic work and the student group that I am a part of (Stevens Student Managed Investment Fund). In addition, I didn't necessarily make this library with best practices in mind, so it is more than probable that its slower than your usual concurrency libraries.
-
-I used my Mac M1 Pro to make Lockless with LLVM/Clang auto-formatting (on-save) on VSCode (4-space indent).
