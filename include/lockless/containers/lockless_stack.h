@@ -1,7 +1,7 @@
 #ifndef LOCKLESS_TREIBER_STACK_H
 #define LOCKLESS_TREIBER_STACK_H
 
-#include "../core/ebr.h"
+#include "../core/lockless_ebr.h"
 
 #include <atomic>
 #include <utility>

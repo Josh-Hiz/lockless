@@ -1,7 +1,7 @@
 #ifndef LOCKLESS_CONTAINERS_SPSC_QUEUE_H
 #define LOCKLESS_CONTAINERS_SPSC_QUEUE_H
 
-#include "../core/cache.h"
+#include "../core/lockless_cache.h"
 
 #include <atomic>
 #include <bit>
