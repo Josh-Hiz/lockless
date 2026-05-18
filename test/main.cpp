@@ -2,9 +2,6 @@
 #include <print>
 #include <thread>
 
-/*
-* Print a basic header using UNIX text color coding.
-*/
 static void print_header(const std::string& text) {
     std::print("\n\033[1;36m--- {} ---\033[0m\n", text);
 }
@@ -198,6 +195,48 @@ static void lockless_seqlock_test() {
     std::println("Torn = {}\nExpected = 0\nResult = {}", v, v == 0 ? "PASS" : "FAIL");
 }
 
+static void lockless_fork_join_pool_test() {
+    print_header("Running ForkJoinPool: vector reduction, 1M elements, 10 sections");
+
+    constexpr unsigned int N = 10000000;
+    constexpr unsigned int sections = 16;
+    constexpr unsigned int chunk_size = N / sections;
+    constexpr std::int64_t gold = std::int64_t(N) * (N - 1) / 2;
+    std::int64_t sum = 0;
+    std::vector<std::int64_t> data(N);
+
+    for (unsigned int i = 0; i < N; ++i) {
+        data[i] = i;
+    }
+
+    lockless::ForkJoinPool pool;
+    std::vector<std::future<std::int64_t>> futures;
+    futures.reserve(sections);
+
+    const auto t0 = std::chrono::steady_clock::now();
+
+    for (unsigned int c = 0; c < sections; ++c) {
+        const unsigned int start = c * chunk_size;
+        const unsigned int end = (c == sections - 1) ? N : start + chunk_size;
+        futures.push_back(pool.submit_with_future([&data, start, end]() {
+            std::int64_t local = 0;
+            for (unsigned int i = start; i < end; ++i) {
+                local += data[i];
+            }
+            return local;
+        }));
+    }
+
+    for (auto& f : futures) {
+        sum += f.get();
+    }
+    
+    const auto elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+
+    std::println("Elements per second: {}", N / elapsed);
+    std::println("Sum = {}\nExpected = {}\nResult = {}", sum, gold, sum == gold ? "PASS" : "FAIL");
+}
+
 /*
 * Runs demo tests for all supported containers, synch primitives, and executors 
   tests include the following:
@@ -210,12 +249,17 @@ static void lockless_seqlock_test() {
 */
 static void run_tests() {
     print_header("Running Tests");
+    
     const auto t0 = std::chrono::steady_clock::now();
+    
     lockless_spsc_test();
     lockless_mpmc_test();
     lockless_stack_test();
     lockless_seqlock_test();
+    lockless_fork_join_pool_test();
+
     const auto elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+    
     std::println("All tests took in total: {} seconds", elapsed);
 }
 
