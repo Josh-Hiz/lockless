@@ -3,3 +3,4 @@ learning/
 docs/
 dump/
 .DS_Store
+.cache/

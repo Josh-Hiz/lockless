@@ -200,7 +200,7 @@ static void lockless_fork_join_pool_test() {
 
     constexpr unsigned int N = 10000000;
     constexpr unsigned int sections = 16;
-    constexpr unsigned int chunk_size = N / sections;
+    constexpr unsigned int chunk_size = (N + sections) / sections;
     constexpr std::int64_t gold = std::int64_t(N) * (N - 1) / 2;
     std::int64_t sum = 0;
     std::vector<std::int64_t> data(N);
